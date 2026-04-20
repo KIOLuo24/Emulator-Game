@@ -87,7 +87,7 @@
             // PS1: 优先使用 scph5501.bin，如果不存在则使用 scph5502.bin
             window.EJS_biosUrl = "/Emulator-Game/bios/scph5501.bin";
 
-            fetch('./bios/scph5501.bin', { method: 'HEAD' })
+            fetch('/Emulator-Game/bios/scph5501.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
                         console.log('scph5501.bin not found, switching to scph5502.bin');
@@ -114,7 +114,7 @@
             // NeoGeo Pocket: 优先使用彩色版，回退到普通版
             window.EJS_biosUrl = "/Emulator-Game/bios/Neo-Geo_Pocket_Color.bin";
 
-            fetch('./bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
+            fetch('/Emulator-Game/bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
                         console.log('Neo-Geo_Pocket_Color.bin not found, switching to Neo-Geo_Pocket.bin');
@@ -131,7 +131,7 @@
         else if (coreType === 'neogeopocketcolor') {
             window.EJS_biosUrl = "/Emulator-Game/bios/Neo-Geo_Pocket_Color.bin";
 
-            fetch('/bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
+            fetch('/Emulator-Game/bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
                         console.log('Neo-Geo_Pocket_Color.bin not found, switching to Neo-Geo_Pocket.bin');
