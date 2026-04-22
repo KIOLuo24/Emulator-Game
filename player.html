@@ -12,7 +12,7 @@
     <div id="game-container">
         <div id="game"></div>
     </div>
-    <script>
+        <script>
     //获取 URL 参数，例如player.html?game=mario&type=nes
         const urlParams = new URLSearchParams(window.location.search);
         const game = urlParams.get('game');
@@ -62,15 +62,15 @@
             window.EJS_gameUrl = `./roms/${folderName}/${game}`;
         }
 
-        // 指向你本地解压的 EmulatorJS 数据目录
-        window.EJS_pathtodata = './ems/data/';
+        // 使用 CDN 数据路径（所有核心文件从 CDN 加载）
+        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
 
-        // 设置语言为英文（避免 zh-CN.json 缺失问题）
-        window.EJS_language = 'en';
+        // Deleted:// 设置语言为英文（避免 zh-CN.json 缺失问题）
+        // Deleted:window.EJS_language = 'en';
 
         // 禁用缓存以避免查询参数问题
         window.EJS_CacheLimit = 0;
-        
+
         // 强制使用旧版核心（避免 legacy 参数导致的文件名变化）
         window.EJS_forceLegacyCores = false;
 
@@ -147,7 +147,6 @@
             window.EJS_settings = {
                 "webgl2Enabled": "enabled"
             };
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
@@ -159,3 +158,4 @@
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 </body>
 </html>
+
