@@ -18,8 +18,8 @@
         const game = urlParams.get('game');
         const type = urlParams.get('type');
 
-        // 启用调试模式，加载非压缩文件
-        window.EJS_DEBUG_XX = true;
+        // 关闭调试模式，使用压缩文件
+        window.EJS_DEBUG_XX = false;
 
         window.EJS_player = '#game';
 
