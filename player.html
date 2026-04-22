@@ -50,13 +50,23 @@
         const coreType = type ? type.toLowerCase() : '';
         const mappedCore = coreMap[coreType] || coreType;
         window.EJS_core = mappedCore;
+        
+        console.log('=== EmulatorJS Debug Info ===');
+        console.log('URL type parameter:', type);
+        console.log('coreType (lowercase):', coreType);
+        console.log('mappedCore (from coreMap):', mappedCore);
+        console.log('window.EJS_core:', window.EJS_core);
+        console.log('Expected core file: gambatte-legacy-wasm.data');
+        console.log('=============================');
 
         if (game && type) {
             const folderName = folderMap[coreType] || coreType;
             window.EJS_gameUrl = `./roms/${folderName}/${game}`;
+            console.log('Game URL:', window.EJS_gameUrl);
         }
 
         window.EJS_pathtodata = './ems/data/';
+        console.log('Path to data:', window.EJS_pathtodata);
 
         window.EJS_language = 'en-US';
 
