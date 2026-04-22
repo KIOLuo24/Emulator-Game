@@ -15,7 +15,11 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const game = urlParams.get('game');
-        const type = urlParams.get('type');
+        let type = urlParams.get('type');
+        
+        if (type && type.includes('?')) {
+            type = type.split('?')[0];
+        }
 
         window.EJS_DEBUG_XX = false;
 
@@ -52,7 +56,8 @@
         window.EJS_core = mappedCore;
         
         console.log('=== EmulatorJS Debug Info ===');
-        console.log('URL type parameter:', type);
+        console.log('Raw type parameter:', urlParams.get('type'));
+        console.log('Cleaned type:', type);
         console.log('coreType (lowercase):', coreType);
         console.log('mappedCore (from coreMap):', mappedCore);
         console.log('window.EJS_core:', window.EJS_core);
