@@ -18,8 +18,7 @@
         const game = urlParams.get('game');
         const type = urlParams.get('type');
 
-        // 启用调试模式，加载非压缩文件
-        window.EJS_DEBUG_XX = true;
+        window.EJS_DEBUG_XX = false;
 
         window.EJS_player = '#game';
 
@@ -141,7 +140,6 @@
             window.EJS_settings = {
                 "webgl2Enabled": "enabled"
             };
-            window.EJS_pathtodata = './ems/data/';
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
