@@ -13,32 +13,6 @@
         <div id="game"></div>
     </div>
     <script>
-    // 阻止 userid 参数添加到 URL（必须在 loader.js 加载前执行）
-    (function() {
-        // 方法1: 拦截 XMLHttpRequest
-        const originalXHROpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method, url, ...args) {
-            if (typeof url === 'string' && url.includes('?userid=')) {
-                url = url.replace(/\?userid=[^&]*(&|$)/, '?').replace(/\?$/, '');
-            }
-            return originalXHROpen.call(this, method, url, ...args);
-        };
-
-        // 方法2: 拦截 Fetch API
-        const originalFetch = window.fetch;
-        window.fetch = function(input, init) {
-            if (typeof input === 'string' && input.includes('?userid=')) {
-                input = input.replace(/\?userid=[^&]*(&|$)/, '?').replace(/\?$/, '');
-            } else if (input instanceof Request && input.url.includes('?userid=')) {
-                const newUrl = input.url.replace(/\?userid=[^&]*(&|$)/, '?').replace(/\?$/, '');
-                input = new Request(newUrl, input);
-            }
-            return originalFetch.call(this, input, init);
-        };
-
-        console.log('[URL Filter] Blocked userid parameter injection');
-    })();
-
     //获取 URL 参数，例如player.html?game=mario&type=nes
         const urlParams = new URLSearchParams(window.location.search);
         const game = urlParams.get('game');
@@ -93,6 +67,12 @@
 
         // 设置语言为英文（避免 zh-CN.json 缺失问题）
         window.EJS_language = 'en';
+
+        // 禁用缓存以避免查询参数问题
+        window.EJS_CacheLimit = 0;
+        
+        // 强制使用旧版核心（避免 legacy 参数导致的文件名变化）
+        window.EJS_forceLegacyCores = false;
 
         // BIOS 配置
         if (coreType === 'ps1' || coreType === 'playstation') {
