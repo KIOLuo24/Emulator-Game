@@ -95,6 +95,21 @@
         else if (coreType === 'saturn') {
             window.EJS_biosUrl = "./bios/saturn_bios.bin";
         }
+        else if (coreType === 'nds') {
+            window.EJS_biosUrl = "./bios/bios7.bin";
+            fetch('./bios/bios7.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        window.EJS_biosUrl = "./bios/bios9.bin";
+                        return fetch('./bios/bios9.bin', { method: 'HEAD' });
+                    }
+                })
+                .then(response => {
+                    if (response && !response.ok) {
+                        window.EJS_biosUrl = "./bios/firmware.bin";
+                    }
+                });
+        }
         else if (coreType === 'neogeopocket' || coreType === 'neogeopocketcolor') {
             window.EJS_biosUrl = "./bios/Neo-Geo_Pocket_Color.bin";
 
