@@ -66,6 +66,12 @@
 
         window.EJS_language = 'en-US';
 
+        // --- 核心路径配置 ---
+        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/core/ 目录加载
+        window.EJS_settings = {
+            "corePath": "./ems/core/"
+        };
+
         if (coreType === 'ps1' || coreType === 'playstation') {
             window.EJS_biosUrl = "./bios/scph5501.bin";
 
@@ -127,9 +133,11 @@
                     window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
                 });
         }
-        
+
         if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
+            // 合并设置：保留 corePath 并添加 webgl2Enabled
             window.EJS_settings = {
+                ...window.EJS_settings,
                 "webgl2Enabled": "enabled"
             };
 
