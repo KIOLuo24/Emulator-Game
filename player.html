@@ -73,20 +73,20 @@
         };
 
         if (coreType === 'ps1' || coreType === 'playstation') {
-            window.EJS_biosUrl = "./bios/scph5501.bin";
+            window.EJS_biosUrl = "./bios/scph5502.bin";
 
-            fetch('./bios/scph5501.bin', { method: 'HEAD' })
+            fetch('./bios/scph5502.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
-                        console.log('scph5501.bin not found, switching to scph5502.bin');
-                        window.EJS_biosUrl = "./bios/scph5502.bin";
+                        console.log('scph5502.bin not found, switching to scph5501.bin');
+                        window.EJS_biosUrl = "./bios/scph5501.bin";
                     } else {
                         console.log('Using scph5501.bin BIOS');
                     }
                 })
                 .catch(() => {
-                    console.log('Failed to check scph5501.bin, switching to scph5502.bin');
-                    window.EJS_biosUrl = "./bios/scph5502.bin";
+                    console.log('Failed to check scph5502.bin, switching to scph5501.bin');
+                    window.EJS_biosUrl = "./bios/scph5501.bin";
                 });
         }
         else if (coreType === 'gba') {
