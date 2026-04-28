@@ -16,7 +16,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const game = urlParams.get('game');
         let type = urlParams.get('type');
-        
+
         if (type && type.includes('?')) {
             type = type.split('?')[0];
         }
@@ -67,9 +67,10 @@
         window.EJS_language = 'en-US';
 
         // --- 核心路径配置 ---
-        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/core/ 目录加载
+        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
         window.EJS_settings = {
-            "corePath": "./ems/core/"
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512
         };
 
         if (coreType === 'ps1' || coreType === 'playstation') {
@@ -92,7 +93,7 @@
         else if (coreType === 'gba') {
             window.EJS_biosUrl = "./bios/gba_bios.bin";
         }
-        else if (coreType === 'gbc') {
+        else if (coreType === 'gb' || coreType === 'gbc') {
             window.EJS_biosUrl = "./bios/gbc_bios.bin";
         }
         else if (coreType === 'segacd') {
@@ -135,18 +136,25 @@
         }
 
         if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
-            // 合并设置：保留 corePath 并添加 webgl2Enabled
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "webgl2Enabled": "enabled"
             };
 
+            // 修正：使用正确的 fbneo BIOS 路径
+            window.EJS_biosUrl = "./bios/neogeo.zip";
+
+            // 移除 EJS_externalFiles 配置，避免路径冲突
+            // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
+
+            console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
+
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
+                console.log("MSlug6 detected: Using awbios.zip BIOS");
             }
-
-            console.log("FBNeo mode: Scanning ROM directory for BIOS...");
         }
+
     </script>
     <script src="./ems/data/loader.js"></script>
 </body>
