@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>本地游戏中心</title>
+    <title>Emulator-Game</title>
     <style>
     body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
     #game-container {width:100vw;height:100vh;}
@@ -13,17 +13,18 @@
         <div id="game"></div>
     </div>
     <script>
-    //获取 URL 参数，例如player.html?game=mario&type=nes
         const urlParams = new URLSearchParams(window.location.search);
         const game = urlParams.get('game');
-        const type = urlParams.get('type');
+        let type = urlParams.get('type');
 
-        // 启用调试模式，加载非压缩文件
-        window.EJS_DEBUG_XX = true;
+        if (type && type.includes('?')) {
+            type = type.split('?')[0];
+        }
+
+        window.EJS_DEBUG_XX = false;
 
         window.EJS_player = '#game';
 
-        // 核心名称映射（将简写映射到实际的核心名称）
         const coreMap = {
             'ps1': 'pcsx_rearmed',
             'playstation': 'pcsx_rearmed',
@@ -44,53 +45,55 @@
             'arcade': 'fbneo'
         };
 
-        // ROM 文件夹路径映射（将简写映射到实际的文件夹名称）
         const folderMap = {
             'mame': 'fbneo',
             'ps1': 'playstation',
             'playstation': 'playstation'
         };
 
-        // 根据类型获取正确的核心名称
         const coreType = type ? type.toLowerCase() : '';
-        window.EJS_core = coreMap[coreType] || coreType;
+        const mappedCore = coreMap[coreType] || coreType;
+        window.EJS_core = mappedCore;
 
-        //---本地路径配置---
-        //指向你本地存放游戏的目录（使用文件夹映射）
         if (game && type) {
-            const folderName = folderMap[coreType] || type;
+            const folderName = folderMap[coreType] || coreType;
             window.EJS_gameUrl = `./roms/${folderName}/${game}`;
+            console.log('Game URL:', window.EJS_gameUrl);
         }
 
-        // 指向你本地解压的 EmulatorJS 数据目录
         window.EJS_pathtodata = './ems/data/';
+        console.log('Path to data:', window.EJS_pathtodata);
 
-        // 设置语言为英文（避免 zh-CN.json 缺失问题）
-        window.EJS_language = 'en';
+        window.EJS_language = 'en-US';
 
-        // BIOS 配置
+        // --- 核心路径配置 ---
+        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
+        window.EJS_settings = {
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512
+        };
+
         if (coreType === 'ps1' || coreType === 'playstation') {
-            // PS1: 优先使用 scph5501.bin，如果不存在则使用 scph5502.bin
-            window.EJS_biosUrl = "./bios/scph5501.bin";
+            window.EJS_biosUrl = "./bios/scph5502.bin";
 
-            fetch('./bios/scph5501.bin', { method: 'HEAD' })
+            fetch('./bios/scph5502.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
-                        console.log('scph5501.bin not found, switching to scph5502.bin');
-                        window.EJS_biosUrl = "./bios/scph5502.bin";
+                        console.log('scph5502.bin not found, switching to scph5501.bin');
+                        window.EJS_biosUrl = "./bios/scph5501.bin";
                     } else {
                         console.log('Using scph5501.bin BIOS');
                     }
                 })
                 .catch(() => {
-                    console.log('Failed to check scph5501.bin, switching to scph5502.bin');
-                    window.EJS_biosUrl = "./bios/scph5502.bin";
+                    console.log('Failed to check scph5502.bin, switching to scph5501.bin');
+                    window.EJS_biosUrl = "./bios/scph5501.bin";
                 });
         }
         else if (coreType === 'gba') {
             window.EJS_biosUrl = "./bios/gba_bios.bin";
         }
-        else if (coreType === 'gbc') {
+        else if (coreType === 'gb' || coreType === 'gbc') {
             window.EJS_biosUrl = "./bios/gbc_bios.bin";
         }
         else if (coreType === 'segacd') {
@@ -99,8 +102,22 @@
         else if (coreType === 'saturn') {
             window.EJS_biosUrl = "./bios/saturn_bios.bin";
         }
-        else if (coreType === 'neogeopocket') {
-            // NeoGeo Pocket: 优先使用彩色版，回退到普通版
+        else if (coreType === 'nds') {
+            window.EJS_biosUrl = "./bios/bios7.bin";
+            fetch('./bios/bios7.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        window.EJS_biosUrl = "./bios/bios9.bin";
+                        return fetch('./bios/bios9.bin', { method: 'HEAD' });
+                    }
+                })
+                .then(response => {
+                    if (response && !response.ok) {
+                        window.EJS_biosUrl = "./bios/firmware.bin";
+                    }
+                });
+        }
+        else if (coreType === 'neogeopocket' || coreType === 'neogeopocketcolor') {
             window.EJS_biosUrl = "./bios/Neo-Geo_Pocket_Color.bin";
 
             fetch('./bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
@@ -117,38 +134,27 @@
                     window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
                 });
         }
-        else if (coreType === 'neogeopocketcolor') {
-            window.EJS_biosUrl = "./bios/Neo-Geo_Pocket_Color.bin";
 
-            fetch('./bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
-                .then(response => {
-                    if (!response.ok) {
-                        console.log('Neo-Geo_Pocket_Color.bin not found, switching to Neo-Geo_Pocket.bin');
-                        window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
-                    } else {
-                        console.log('Using Neo-Geo_Pocket_Color.bin BIOS');
-                    }
-                })
-                .catch(() => {
-                    console.log('Failed to check Neo-Geo_Pocket_Color.bin, switching to Neo-Geo_Pocket.bin');
-                    window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
-                });
-        }
         if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
-            // 关键：不再通过 EJS_biosUrl 挂载，因为你已经把 neogeo.zip 放到了 ROM 同级目录
-            // 这能避免 loader.js 将其挂载到错误的虚拟路径下
-
             window.EJS_settings = {
+                ...window.EJS_settings,
                 "webgl2Enabled": "enabled"
             };
-            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+
+            // 修正：使用正确的 fbneo BIOS 路径
+            window.EJS_biosUrl = "./bios/neogeo.zip";
+
+            // 移除 EJS_externalFiles 配置，避免路径冲突
+            // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
+
+            console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
+                console.log("MSlug6 detected: Using awbios.zip BIOS");
             }
-
-            console.log("FBNeo mode: Scanning ROM directory for BIOS...");
         }
+
     </script>
     <script src="./ems/data/loader.js"></script>
 </body>
