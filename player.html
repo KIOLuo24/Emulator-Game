@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Emulator-Game</title>
+    <style>
+    body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
+    #game-container {width:100vw;height:100vh;}
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game"></div>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const game = urlParams.get('game');
+        let type = urlParams.get('type');
+
+        if (type && type.includes('?')) {
+            type = type.split('?')[0];
+        }
+
+        window.EJS_DEBUG_XX = false;
+
+        window.EJS_player = '#game';
+
+        const coreMap = {
+            'ps1': 'pcsx_rearmed',
+            'playstation': 'pcsx_rearmed',
+            'nes': 'fceumm',
+            'snes': 'snes9x',
+            'gb': 'gambatte',
+            'gbc': 'gambatte',
+            'gba': 'mgba',
+            'nds': 'melonds',
+            'n64': 'mupen64plus_next',
+            'genesis': 'genesis_plus_gx',
+            'sega': 'genesis_plus_gx',
+            'segacd': 'genesis_plus_gx',
+            'saturn': 'yabause',
+            'neogeopocket': 'mednafen_ngp',
+            'neogeopocketcolor': 'mednafen_ngp',
+            'neogeo': 'fbneo',
+            'arcade': 'fbneo'
+        };
+
+        const folderMap = {
+            'mame': 'fbneo',
+            'ps1': 'playstation',
+            'playstation': 'playstation'
+        };
+
+        const coreType = type ? type.toLowerCase() : '';
+        const mappedCore = coreMap[coreType] || coreType;
+        window.EJS_core = mappedCore;
+
+        if (game && type) {
+            const folderName = folderMap[coreType] || coreType;
+            window.EJS_gameUrl = `./roms/${folderName}/${game}`;
+            console.log('Game URL:', window.EJS_gameUrl);
+        }
+
+        window.EJS_pathtodata = './ems/data/';
+        console.log('Path to data:', window.EJS_pathtodata);
+
+        window.EJS_language = 'en-US';
+
+        // --- 核心路径配置 ---
+        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
+        window.EJS_settings = {
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512
+        };
+
+        if (coreType === 'ps1' || coreType === 'playstation') {
+            window.EJS_biosUrl = "./bios/scph5502.bin";
+
+            fetch('./bios/scph5502.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('scph5502.bin not found, switching to scph5501.bin');
+                        window.EJS_biosUrl = "./bios/scph5501.bin";
+                    } else {
+                        console.log('Using scph5501.bin BIOS');
+                    }
+                })
+                .catch(() => {
+                    console.log('Failed to check scph5502.bin, switching to scph5501.bin');
+                    window.EJS_biosUrl = "./bios/scph5501.bin";
+                });
+        }
+        else if (coreType === 'gba') {
+            window.EJS_biosUrl = "./bios/gba_bios.bin";
+        }
+        else if (coreType === 'gb' || coreType === 'gbc') {
+            window.EJS_biosUrl = "./bios/gbc_bios.bin";
+        }
+        else if (coreType === 'segacd') {
+            window.EJS_biosUrl = "./bios/bios_CD_U.bin";
+        }
+        else if (coreType === 'saturn') {
+            window.EJS_biosUrl = "./bios/saturn_bios.bin";
+        }
+        else if (coreType === 'nds') {
+            window.EJS_biosUrl = "./bios/bios7.bin";
+            fetch('./bios/bios7.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        window.EJS_biosUrl = "./bios/bios9.bin";
+                        return fetch('./bios/bios9.bin', { method: 'HEAD' });
+                    }
+                })
+                .then(response => {
+                    if (response && !response.ok) {
+                        window.EJS_biosUrl = "./bios/firmware.bin";
+                    }
+                });
+        }
+        else if (coreType === 'neogeopocket' || coreType === 'neogeopocketcolor') {
+            window.EJS_biosUrl = "./bios/Neo-Geo_Pocket_Color.bin";
+
+            fetch('./bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('Neo-Geo_Pocket_Color.bin not found, switching to Neo-Geo_Pocket.bin');
+                        window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
+                    } else {
+                        console.log('Using Neo-Geo_Pocket_Color.bin BIOS');
+                    }
+                })
+                .catch(() => {
+                    console.log('Failed to check Neo-Geo_Pocket_Color.bin, switching to Neo-Geo_Pocket.bin');
+                    window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
+                });
+        }
+
+        if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
+            window.EJS_settings = {
+                ...window.EJS_settings,
+                "webgl2Enabled": "enabled"
+            };
+
+            // 修正：使用正确的 fbneo BIOS 路径
+            window.EJS_biosUrl = "./bios/neogeo.zip";
+
+            // 移除 EJS_externalFiles 配置，避免路径冲突
+            // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
+
+            console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
+
+            if (game && game.includes('mslug6')) {
+                window.EJS_biosUrl = "./bios/awbios.zip";
+                console.log("MSlug6 detected: Using awbios.zip BIOS");
+            }
+        }
+
+    </script>
+    <script src="./ems/data/loader.js"></script>
+</body>
+</html>
