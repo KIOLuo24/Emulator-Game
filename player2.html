@@ -57,7 +57,8 @@
 
         if (game && type) {
             const folderName = folderMap[coreType] || coreType;
-            window.EJS_gameUrl = `https://github.com/KIOLuo24/Emulator-Game/releases/download/latest/${game}`;
+            // 使用 jsDelivr CDN 访问 GitHub Release 资源，解决 CORS 问题
+            window.EJS_gameUrl = `https://cdn.jsdelivr.net/gh/KIOLuo24/Emulator-Game@latest/${game}`;
             console.log('Game URL:', window.EJS_gameUrl);
         }
 
