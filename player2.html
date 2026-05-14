@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Emulator-Game</title>
+    <style>
+    body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
+    #game-container {width:100vw;height:100vh;}
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+    #loading-overlay.active {
+        display: flex;
+    }
+    .progress-bar {
+        width: 300px;
+        height: 20px;
+        background: #333;
+        border-radius: 10px;
+        margin-top: 20px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #45a049);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    .loading-text {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #ccc;
+    }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game"></div>
+    </div>
+    <div id="loading-overlay">
+        <div class="loading-title">正在从 GitHub Release 下载游戏...</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="loading-text" id="loading-text">准备下载...</div>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const game = urlParams.get('game');
+        const type = urlParams.get('type');
+        const githubRepo = urlParams.get('repo') || 'username/roms-repo';
+
+        window.EJS_DEBUG_XX = false;
+
+        window.EJS_player = '#game';
+
+        const coreMap = {
+            'ps1': 'pcsx_rearmed',
+            'playstation': 'pcsx_rearmed',
+            'nes': 'fceumm',
+            'snes': 'snes9x',
+            'gb': 'gambatte',
+            'gbc': 'gambatte',
+            'gba': 'mgba',
+            'nds': 'melonds',
+            'n64': 'mupen64plus_next',
+            'genesis': 'genesis_plus_gx',
+            'sega': 'genesis_plus_gx',
+            'segacd': 'genesis_plus_gx',
+            'saturn': 'yabause',
+            'neogeopocket': 'mednafen_ngp',
+            'neogeopocketcolor': 'mednafen_ngp',
+            'neogeo': 'fbneo',
+            'arcade': 'fbneo'
+        };
+
+        const folderMap = {
+            'mame': 'fbneo',
+            'ps1': 'playstation',
+            'playstation': 'playstation'
+        };
+
+        const coreType = type ? type.toLowerCase() : '';
+        const mappedCore = coreMap[coreType] || coreType;
+        window.EJS_core = mappedCore;
+
+        console.log('=== EmulatorJS Debug Info ===');
+        console.log('URL type parameter:', type);
+        console.log('coreType (lowercase):', coreType);
+        console.log('mappedCore (from coreMap):', mappedCore);
+        console.log('window.EJS_core:', window.EJS_core);
+        console.log('Expected core file: gambatte-legacy-wasm.data');
+        console.log('=============================');
+
+        window.EJS_pathtodata = './ems/data/';
+        console.log('Path to data:', window.EJS_pathtodata);
+
+        window.EJS_language = 'en-US';
+
+        // --- GitHub Release 配置 ---
+        const GITHUB_RELEASE_BASE = `https://github.com/${githubRepo}/releases/latest/download`;
+
+        function showLoading(title = '正在从 GitHub Release 下载游戏...') {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.querySelector('.loading-title').textContent = title;
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        function updateProgress(percent, text) {
+            const progressFill = document.getElementById('progress-fill');
+            const loadingText = document.getElementById('loading-text');
+            progressFill.style.width = percent + '%';
+            loadingText.textContent = text;
+        }
+
+        async function fetchGameFromRelease(gameName) {
+            showLoading('正在获取游戏信息...');
+
+            try {
+                const gameUrl = `${GITHUB_RELEASE_BASE}/${gameName}`;
+
+                const cacheKey = `emulator_game_${gameName}`;
+                const cachedData = localStorage.getItem(cacheKey);
+
+                if (cachedData) {
+                    console.log('Using cached game:', gameName);
+                    updateProgress(100, '使用缓存的游戏文件');
+                    setTimeout(() => {
+                        hideLoading();
+                        window.EJS_gameUrl = cachedData;
+                        initEmulator();
+                    }, 500);
+                    return;
+                }
+
+                console.log('Downloading from GitHub Release:', gameUrl);
+                updateProgress(10, '开始下载游戏...');
+
+                window.EJS_gameUrl = gameUrl;
+
+                let progress = 10;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    if (progress <= 90) {
+                        updateProgress(progress, `下载中... ${progress}%`);
+                    }
+                }, 500);
+
+                setTimeout(() => {
+                    clearInterval(progressInterval);
+                    updateProgress(100, '下载完成，正在加载...');
+                    setTimeout(() => {
+                        hideLoading();
+                    }, 1000);
+                }, 2000);
+
+                initEmulator();
+
+            } catch (error) {
+                console.error('Failed to fetch game:', error);
+                updateProgress(0, '下载失败: ' + error.message);
+                setTimeout(() => {
+                    hideLoading();
+                    alert('无法从 GitHub Release 下载游戏，请检查网络连接或仓库配置');
+                }, 2000);
+            }
+        }
+
+        function initEmulator() {
+            console.log('Initializing emulator with game:', window.EJS_gameUrl);
+        }
+
+        if (coreType === 'ps1' || coreType === 'playstation') {
+            window.EJS_biosUrl = "./bios/scph5501.bin";
+
+            fetch('./bios/scph5501.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('scph5501.bin not found, switching to scph5502.bin');
+                        window.EJS_biosUrl = "./bios/scph5502.bin";
+                    } else {
+                        console.log('Using scph5501.bin BIOS');
+                    }
+                })
+                .catch(() => {
+                    console.log('Failed to check scph5501.bin, switching to scph5502.bin');
+                    window.EJS_biosUrl = "./bios/scph5502.bin";
+                });
+        }
+        else if (coreType === 'gba') {
+            window.EJS_biosUrl = "./bios/gba_bios.bin";
+        }
+        else if (coreType === 'gb' || coreType === 'gbc') {
+            window.EJS_biosUrl = "./bios/gbc_bios.bin";
+        }
+        else if (coreType === 'segacd') {
+            window.EJS_biosUrl = "./bios/bios_CD_U.bin";
+        }
+        else if (coreType === 'saturn') {
+            window.EJS_biosUrl = "./bios/saturn_bios.bin";
+        }
+        else if (coreType === 'neogeopocket' || coreType === 'neogeopocketcolor') {
+            window.EJS_biosUrl = "./bios/Neo-Geo_Pocket_Color.bin";
+
+            fetch('./bios/Neo-Geo_Pocket_Color.bin', { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('Neo-Geo_Pocket_Color.bin not found, switching to Neo-Geo_Pocket.bin');
+                        window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
+                    } else {
+                        console.log('Using Neo-Geo_Pocket_Color.bin BIOS');
+                    }
+                })
+                .catch(() => {
+                    console.log('Failed to check Neo-Geo_Pocket_Color.bin, switching to Neo-Geo_Pocket.bin');
+                    window.EJS_biosUrl = "./bios/Neo-Geo_Pocket.bin";
+                });
+        }
+
+        if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
+            window.EJS_settings = {
+                "webgl2Enabled": "enabled"
+            };
+
+            if (game && game.includes('mslug6')) {
+                window.EJS_biosUrl = "./bios/awbios.zip";
+            }
+
+            console.log("FBNeo mode: Scanning ROM directory for BIOS...");
+        }
+
+        if (game && type) {
+            fetchGameFromRelease(game);
+        }
+    </script>
+    <script src="./ems/data/loader.js"></script>
+</body>
+</html>
