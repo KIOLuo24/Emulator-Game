@@ -6,62 +6,20 @@
     <style>
     body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
     #game-container {width:100vw;height:100vh;}
-    #loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        z-index: 9999;
-        color: white;
-        font-family: Arial, sans-serif;
-    }
-    #loading-overlay.active {
-        display: flex;
-    }
-    .progress-bar {
-        width: 300px;
-        height: 20px;
-        background: #333;
-        border-radius: 10px;
-        margin-top: 20px;
-        overflow: hidden;
-    }
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #4CAF50, #45a049);
-        width: 0%;
-        transition: width 0.3s ease;
-    }
-    .loading-text {
-        margin-top: 10px;
-        font-size: 14px;
-        color: #ccc;
-    }
     </style>
 </head>
 <body>
     <div id="game-container">
         <div id="game"></div>
     </div>
-    <div id="loading-overlay">
-        <div class="loading-title">正在从 GitHub Release 下载游戏...</div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
-        </div>
-        <div class="loading-text" id="loading-text">准备下载...</div>
-    </div>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        let game = urlParams.get('game');
-        const type = urlParams.get('type');
-        const gameHash = urlParams.get('hash');
-        const githubRepo = urlParams.get('repo') || 'kioluo24/my-game-roms';
+        const game = urlParams.get('game');
+        let type = urlParams.get('type');
+
+        if (type && type.includes('?')) {
+            type = type.split('?')[0];
+        }
 
         window.EJS_DEBUG_XX = false;
 
@@ -97,164 +55,44 @@
         const mappedCore = coreMap[coreType] || coreType;
         window.EJS_core = mappedCore;
 
-        console.log('=== EmulatorJS Debug Info ===');
-        console.log('URL type parameter:', type);
-        console.log('URL game parameter:', game);
-        console.log('URL hash parameter:', gameHash);
-        console.log('GitHub Repo:', githubRepo);
-        console.log('coreType (lowercase):', coreType);
-        console.log('mappedCore (from coreMap):', mappedCore);
-        console.log('window.EJS_core:', window.EJS_core);
-        console.log('=============================');
+        if (game && type) {
+            const folderName = folderMap[coreType] || coreType;
+            window.EJS_gameUrl = `./roms/${folderName}/${game}`;
+            console.log('Game URL:', window.EJS_gameUrl);
+        }
 
         window.EJS_pathtodata = './ems/data/';
         console.log('Path to data:', window.EJS_pathtodata);
 
         window.EJS_language = 'en-US';
 
-        // --- GitHub Release 配置 ---
-        const GITHUB_RELEASE_BASE = `https://github.com/${githubRepo}/releases/latest/download`;
-        const GAMES_INDEX_URL = `https://raw.githubusercontent.com/${githubRepo}/main/games.json`;
+        // --- 核心路径配置 ---
+        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
+        window.EJS_settings = {
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512,
+            "frameRate": 80,
+            "fastForward": true,
+            "slowMotion": false,
+            "rewindEnabled": "enabled"
+        };
 
-        function showLoading(title = '正在从 GitHub Release 下载游戏...') {
-            const overlay = document.getElementById('loading-overlay');
-            overlay.querySelector('.loading-title').textContent = title;
-            overlay.classList.add('active');
-        }
 
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.remove('active');
-        }
-
-        function updateProgress(percent, text) {
-            const progressFill = document.getElementById('progress-fill');
-            const loadingText = document.getElementById('loading-text');
-            progressFill.style.width = percent + '%';
-            loadingText.textContent = text;
-        }
-
-        // 通过 SHA256 哈希值查找游戏文件名
-        async function findGameByHash(hash) {
-            showLoading('正在查找游戏...');
-
-            try {
-                console.log('Fetching games index from:', GAMES_INDEX_URL);
-                updateProgress(20, '正在获取游戏索引...');
-
-                const response = await fetch(GAMES_INDEX_URL);
-
-                if (!response.ok) {
-                    throw new Error(`无法获取游戏索引文件 (HTTP ${response.status})`);
-                }
-
-                const gamesIndex = await response.json();
-                updateProgress(40, '正在搜索匹配的游戏...');
-
-                console.log('Games index loaded:', gamesIndex);
-
-                // 在索引中查找匹配的哈希值
-                let matchedGame = null;
-
-                for (const gameInfo of gamesIndex) {
-                    if (gameInfo.sha256 && gameInfo.sha256.toLowerCase() === hash.toLowerCase()) {
-                        matchedGame = gameInfo;
-                        break;
-                    }
-                }
-
-                if (!matchedGame) {
-                    throw new Error(`未找到哈希值为 ${hash} 的游戏`);
-                }
-
-                updateProgress(60, `找到游戏: ${matchedGame.name}`);
-                console.log('Found game:', matchedGame);
-
-                setTimeout(() => {
-                    hideLoading();
-
-                    // 使用找到的游戏文件名继续加载
-                    game = matchedGame.filename || matchedGame.name;
-                    loadGameFromRelease(game);
-                }, 1000);
-
-                return matchedGame;
-
-            } catch (error) {
-                console.error('Failed to find game by hash:', error);
-                updateProgress(0, '查找失败: ' + error.message);
-                setTimeout(() => {
-                    hideLoading();
-                    alert(`无法通过哈希值找到游戏：${error.message}\n\n请确保：\n1. games.json 文件存在于仓库中\n2. 哈希值正确\n3. 游戏已在索引中注册`);
-                }, 2000);
-                throw error;
-            }
-        }
-
-        // 从 GitHub Release 加载游戏
-        async function loadGameFromRelease(gameName) {
-            showLoading('正在加载游戏...');
-
-            try {
-                const gameUrl = `${GITHUB_RELEASE_BASE}/${gameName}`;
-
-                console.log('Loading game from GitHub Release:', gameUrl);
-                updateProgress(10, '开始下载游戏...');
-
-                window.EJS_gameUrl = gameUrl;
-
-                let progress = 10;
-                const progressInterval = setInterval(() => {
-                    progress += 5;
-                    if (progress <= 90) {
-                        updateProgress(progress, `下载中... ${progress}%`);
-                    }
-                }, 500);
-
-                setTimeout(() => {
-                    clearInterval(progressInterval);
-                    updateProgress(100, '下载完成，正在初始化...');
-                    setTimeout(() => {
-                        hideLoading();
-                    }, 1000);
-                }, 2000);
-
-                initEmulator();
-
-            } catch (error) {
-                console.error('Failed to load game:', error);
-                updateProgress(0, '加载失败: ' + error.message);
-                setTimeout(() => {
-                    hideLoading();
-                    alert('无法从 GitHub Release 加载游戏，请检查网络连接或文件是否存在');
-                }, 2000);
-            }
-        }
-
-        // 从 GitHub Release 获取游戏（兼容原有方式）
-        async function fetchGameFromRelease(gameName) {
-            await loadGameFromRelease(gameName);
-        }
-
-        function initEmulator() {
-            console.log('Initializing emulator with game:', window.EJS_gameUrl);
-        }
-
-        // --- BIOS 配置 ---
         if (coreType === 'ps1' || coreType === 'playstation') {
             window.EJS_biosUrl = "./bios/scph5501.bin";
 
             fetch('./bios/scph5501.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
-                        console.log('scph5501.bin not found, switching to scph5502.bin');
-                        window.EJS_biosUrl = "./bios/scph5502.bin";
+                        console.log('scph5502.bin not found, switching to scph5501.bin');
+                        window.EJS_biosUrl = "./bios/scph5501.bin";
                     } else {
                         console.log('Using scph5501.bin BIOS');
                     }
                 })
                 .catch(() => {
-                    console.log('Failed to check scph5501.bin, switching to scph5502.bin');
-                    window.EJS_biosUrl = "./bios/scph5502.bin";
+                    console.log('Failed to check scph5502.bin, switching to scph5501.bin');
+                    window.EJS_biosUrl = "./bios/scph5501.bin";
                 });
         }
         else if (coreType === 'gba') {
@@ -304,16 +142,15 @@
 
         if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
             window.EJS_settings = {
-                "webgl2Enabled": "enabled",
-                "corePath": "./ems/data/cores/",
-                "memorySize": 512,
-                "frameRate": 80,
-                "fastForward": true,
-                "slowMotion": false,
-                "rewindEnabled": "enabled"
+                ...window.EJS_settings,
+                "webgl2Enabled": "enabled"
             };
 
+            // 修正：使用正确的 fbneo BIOS 路径
             window.EJS_biosUrl = "./bios/neogeo.zip";
+
+            // 移除 EJS_externalFiles 配置，避免路径冲突
+            // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
 
             console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
 
@@ -321,35 +158,8 @@
                 window.EJS_biosUrl = "./bios/awbios.zip";
                 console.log("MSlug6 detected: Using awbios.zip BIOS");
             }
-        } else {
-            window.EJS_settings = {
-                "corePath": "./ems/data/cores/",
-                "memorySize": 512,
-                "frameRate": 80,
-                "fastForward": true,
-                "slowMotion": false,
-                "rewindEnabled": "enabled"
-            };
         }
 
-        // --- 启动逻辑 ---
-        if (type) {
-            // 如果提供了哈希值，先通过哈希查找游戏
-            if (gameHash) {
-                findGameByHash(gameHash).catch(err => {
-                    console.error('Hash lookup failed:', err);
-                });
-            }
-            // 如果直接提供了游戏文件名
-            else if (game) {
-                fetchGameFromRelease(game);
-            }
-            else {
-                console.warn('No game specified. Use ?game=filename.zip or ?hash=sha256hash');
-                showLoading('请指定游戏文件或哈希值');
-                updateProgress(0, '缺少参数');
-            }
-        }
     </script>
     <script src="./ems/data/loader.js"></script>
 </body>
