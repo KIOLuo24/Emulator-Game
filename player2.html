@@ -57,7 +57,7 @@
 
         if (game && type) {
             const folderName = folderMap[coreType] || coreType;
-            window.EJS_gameUrl = `./roms/${folderName}/${game}`;
+            window.EJS_gameUrl = `https://raw.githubusercontent.com/kioluo24/my-game-roms/main/${game}`;
             console.log('Game URL:', window.EJS_gameUrl);
         }
 
