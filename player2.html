@@ -133,16 +133,34 @@
             loadingText.textContent = text;
         }
 
+        // 动态加载 loader.js 的函数
+        function loadLoaderScript() {
+            return new Promise((resolve, reject) => {
+                console.log('Loading loader.js now...');
+                const script = document.createElement('script');
+                script.src = './ems/data/loader.js';
+                script.onload = () => {
+                    console.log('loader.js loaded successfully');
+                    resolve();
+                };
+                script.onerror = (error) => {
+                    console.error('Failed to load loader.js:', error);
+                    reject(error);
+                };
+                document.body.appendChild(script);
+            });
+        }
+
         // 通过 SHA256 哈希值查找游戏文件名
         async function findGameByHash(hash) {
             showLoading('正在查找游戏...');
-            
+
             try {
                 console.log('Fetching games index from:', GAMES_INDEX_URL);
                 updateProgress(20, '正在获取游戏索引...');
 
                 const response = await fetch(GAMES_INDEX_URL);
-                
+
                 if (!response.ok) {
                     throw new Error(`无法获取游戏索引文件 (HTTP ${response.status})`);
                 }
@@ -154,7 +172,7 @@
 
                 // 在索引中查找匹配的哈希值
                 let matchedGame = null;
-                
+
                 for (const gameInfo of gamesIndex) {
                     if (gameInfo.sha256 && gameInfo.sha256.toLowerCase() === hash.toLowerCase()) {
                         matchedGame = gameInfo;
@@ -171,7 +189,7 @@
 
                 setTimeout(() => {
                     hideLoading();
-                    
+
                     // 使用找到的游戏文件名继续加载
                     game = matchedGame.filename || matchedGame.name;
                     loadGameFromRelease(game);
@@ -201,6 +219,7 @@
                 updateProgress(10, '开始下载游戏...');
 
                 window.EJS_gameUrl = gameUrl;
+                console.log('Set window.EJS_gameUrl to:', window.EJS_gameUrl);
 
                 let progress = 10;
                 const progressInterval = setInterval(() => {
@@ -218,7 +237,8 @@
                     }, 1000);
                 }, 2000);
 
-                initEmulator();
+                // 动态加载 loader.js
+                await loadLoaderScript();
 
             } catch (error) {
                 console.error('Failed to load game:', error);
@@ -351,6 +371,5 @@
             }
         }
     </script>
-    <script src="./ems/data/loader.js"></script>
 </body>
 </html>
