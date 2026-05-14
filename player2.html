@@ -56,8 +56,24 @@
         window.EJS_core = mappedCore;
 
         if (game && type) {
-            const folderName = folderMap[coreType] || coreType;
+            // 尝试 main 分支，如果失败则尝试 master 分支
             window.EJS_gameUrl = `https://raw.githubusercontent.com/kioluo24/my-game-roms/main/${game}`;
+            
+            // 添加备用 URL 检查
+            fetch(window.EJS_gameUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.log('main branch not found, switching to master branch');
+                        window.EJS_gameUrl = `https://raw.githubusercontent.com/kioluo24/my-game-roms/master/${game}`;
+                    } else {
+                        console.log('Using main branch');
+                    }
+                })
+                .catch(() => {
+                    console.log('Failed to check main branch, switching to master branch');
+                    window.EJS_gameUrl = `https://raw.githubusercontent.com/kioluo24/my-game-roms/master/${game}`;
+                });
+            
             console.log('Game URL:', window.EJS_gameUrl);
         }
 
