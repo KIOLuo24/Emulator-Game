@@ -21,7 +21,7 @@
             type = type.split('?')[0];
         }
 
-        window.EJS_DEBUG_XX = false;
+        window.EJS_DEBUG_XX = true;
 
         window.EJS_player = '#game';
 
@@ -69,14 +69,20 @@
         // --- 核心路径配置 ---
         // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
         window.EJS_settings = {
-            "corePath": "./ems/cores/",
-            "memorySize": 512
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512,
+            "frameRate": 80,
+            "fastForward": true,
+            "slowMotion": false,
+            "rewindEnabled": "enabled",
+            "cheatsEnabled": "disabled"
         };
 
-        if (coreType === 'ps1' || coreType === 'playstation') {
-            window.EJS_biosUrl = "./bios/scph5502.bin";
 
-            fetch('./bios/scph5502.bin', { method: 'HEAD' })
+        if (coreType === 'ps1' || coreType === 'playstation') {
+            window.EJS_biosUrl = "./bios/scph5501.bin";
+
+            fetch('./bios/scph5501.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
                         console.log('scph5502.bin not found, switching to scph5501.bin');
