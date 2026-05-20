@@ -2,12 +2,9 @@ class EJS_COMPRESSION {
     constructor(EJS) {
         this.EJS = EJS;
     }
-    isCompressed(data) { //https://www.garykessler.net/library/file_sigs.html
-        //todo. Use hex instead of numbers
+    isCompressed(data) {
         if ((data[0] === 80 && data[1] === 75) && ((data[2] === 3 && data[3] === 4) || (data[2] === 5 && data[3] === 6) || (data[2] === 7 && data[3] === 8))) {
             return "zip";
-        } else if (data[0] === 55 && data[1] === 122 && data[2] === 188 && data[3] === 175 && data[4] === 39 && data[5] === 28) {
-            return "7z";
         } else if ((data[0] === 82 && data[1] === 97 && data[2] === 114 && data[3] === 33 && data[4] === 26 && data[5] === 7) && ((data[6] === 0) || (data[6] === 1 && data[7] == 0))) {
             return "rar";
         }
@@ -26,10 +23,7 @@ class EJS_COMPRESSION {
     getWorkerFile(method) {
         return new Promise(async (resolve, reject) => {
             let path, obj;
-            if (method === "7z") {
-                path = "compression/extract7z.js";
-                obj = "sevenZip";
-            } else if (method === "zip") {
+            if (method === "zip") {
                 path = "compression/extractzip.js";
                 obj = "zip";
             } else if (method === "rar") {
