@@ -70,19 +70,13 @@
         // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
         window.EJS_settings = {
             "corePath": "./ems/data/cores/",
-            "memorySize": 512,
-            "frameRate": 80,
-            "fastForward": true,
-            "slowMotion": false,
-            "rewindEnabled": "enabled",
-            "cheatsEnabled": "disabled"
+            "memorySize": 512
         };
 
-
         if (coreType === 'ps1' || coreType === 'playstation') {
-            window.EJS_biosUrl = "./bios/scph5501.bin";
+            window.EJS_biosUrl = "./bios/scph5502.bin";
 
-            fetch('./bios/scph5501.bin', { method: 'HEAD' })
+            fetch('./bios/scph5502.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
                         console.log('scph5502.bin not found, switching to scph5501.bin');
