@@ -72,17 +72,16 @@
         window.EJS_language = 'en-US';
 
         // --- 核心路径配置 ---
-        // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
         window.EJS_settings = {
             "corePath": "./ems/data/cores/",
             "memorySize": 512,
-            "frameRate": 70,
+            "frameRate": 60,
             "fastForward": true,
             "slowMotion": false,
             "rewindEnabled": "enabled",
             "cheatsEnabled": false,
-            "videoScale": 3,
-            "videoSmooth": true,
+            "videoScale": 2,
+            "videoSmooth": false,
             "videoFilter": "none",
             "internalResolution": 1,
             "initialMemorySize": 64,
@@ -93,7 +92,6 @@
         if (coreType === 'ps1' || coreType === 'playstation') {
             window.EJS_biosUrl = "./bios/scph5502.bin";
 
-            // PlayStation 高清设置
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "pcsx_rearmed_gpu": "gpu_unai",
@@ -120,7 +118,6 @@
         else if (coreType === 'gba') {
             window.EJS_biosUrl = "./bios/gba_bios.bin";
 
-            // GBA 高清设置
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "mgba_interframe_blending": false,
@@ -132,7 +129,6 @@
         else if (coreType === 'gb' || coreType === 'gbc') {
             window.EJS_biosUrl = "./bios/gbc_bios.bin";
 
-            // GB/GBC 高清设置
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "gambatte_gb_internal_palette": "optimized",
@@ -148,7 +144,6 @@
         else if (coreType === 'nds') {
             window.EJS_biosUrl = "./bios/bios7.bin";
 
-            // NDS 需要更多内存
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "initialMemorySize": 128,
@@ -190,23 +185,20 @@
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "webgl2Enabled": "enabled",
-                "videoScale": 3,
-                "videoSmooth": true,
+                "videoScale": 2,
+                "videoSmooth": false,
+                "videoFilter": "sharp-bilinear",
                 "fbneo-neogeo-mode": "UNIBIOS",
                 "fbneo-cpu-speed-adjust": 100,
-                "fbneo-frameskip": 2,
+                "fbneo-frameskip": 0,
                 "fbneo-interpolation": 0,
-                "shader": "sabr"
+                "shader": "none"
             };
 
-            // 修正：使用正确的 fbneo BIOS 路径
             window.EJS_biosUrl = "./bios/neogeo.zip";
 
-            // 移除 EJS_externalFiles 配置，避免路径冲突
-            // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
-
             console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
-            console.log("Using SABR shader for enhanced clarity");
+            console.log("Sharp pixel rendering enabled for mslug2");
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
