@@ -72,6 +72,7 @@
         window.EJS_language = 'en-US';
 
         // --- 核心路径配置 ---
+        // 为所有核心预分配足够的内存，避免动态扩展
         window.EJS_settings = {
             "corePath": "./ems/data/cores/",
             "memorySize": 512,
@@ -84,7 +85,7 @@
             "videoSmooth": false,
             "videoFilter": "none",
             "internalResolution": 1,
-            "initialMemorySize": 64,
+            "initialMemorySize": 128,
             "autoFrameSkip": true,
             "frameSkip": 0
         };
@@ -182,23 +183,26 @@
         }
 
         if (coreType === 'mame' || coreType === 'fbneo' || coreType === 'arcade' || coreType === 'neogeo') {
+            // NeoGeo/街机游戏专用配置 - 预分配更多内存
             window.EJS_settings = {
                 ...window.EJS_settings,
                 "webgl2Enabled": "enabled",
                 "videoScale": 2,
                 "videoSmooth": false,
-                "videoFilter": "sharp-bilinear",
+                "videoFilter": "none",
                 "fbneo-neogeo-mode": "UNIBIOS",
                 "fbneo-cpu-speed-adjust": 100,
                 "fbneo-frameskip": 0,
                 "fbneo-interpolation": 0,
-                "shader": "none"
+                "shader": "none",
+                "initialMemorySize": 128
             };
 
             window.EJS_biosUrl = "./bios/neogeo.zip";
 
             console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
             console.log("Sharp pixel rendering enabled for mslug2");
+            console.log("Initial memory set to 128MB to prevent dynamic allocation");
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
