@@ -81,7 +81,7 @@
             "slowMotion": false,
             "rewindEnabled": "enabled",
             "cheatsEnabled": false,
-            "videoScale": 3,
+            "videoScale": 2,
             "videoSmooth": false,
             "videoFilter": "none",
             "internalResolution": 1,
@@ -195,7 +195,8 @@
                 "fbneo-neogeo-mode": "UNIBIOS",
                 "fbneo-cpu-speed-adjust": 100,
                 "fbneo-frameskip": 0,
-                "fbneo-interpolation": 0
+                "fbneo-interpolation": 0,
+                "shader": "crt-easymode.glslp"
             };
 
             // 修正：使用正确的 fbneo BIOS 路径
@@ -205,6 +206,7 @@
             // FBNeo 核心会自动从 biosUrl 加载 neogeo.zip
 
             console.log("NeoGeo/Arcade mode: Using neogeo.zip BIOS from", window.EJS_biosUrl);
+            console.log("Using SABR shader for enhanced clarity");
 
             if (game && game.includes('mslug6')) {
                 window.EJS_biosUrl = "./bios/awbios.zip";
