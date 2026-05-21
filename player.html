@@ -84,7 +84,8 @@
             "videoScale": 3,
             "videoSmooth": false,
             "videoFilter": "none",
-            "internalResolution": 1
+            "internalResolution": 1,
+            "initialMemorySize": 64
         };
 
         if (coreType === 'ps1' || coreType === 'playstation') {
@@ -95,7 +96,8 @@
                 ...window.EJS_settings,
                 "pcsx_rearmed_gpu": "gpu_unai",
                 "pcsx_rearmed_resolution": 2,
-                "pcsx_rearmed_dithering": "disabled"
+                "pcsx_rearmed_dithering": "disabled",
+                "initialMemorySize": 128
             };
 
             fetch('./bios/scph5502.bin', { method: 'HEAD' })
@@ -141,6 +143,13 @@
         }
         else if (coreType === 'nds') {
             window.EJS_biosUrl = "./bios/bios7.bin";
+
+            // NDS 需要更多内存
+            window.EJS_settings = {
+                ...window.EJS_settings,
+                "initialMemorySize": 128
+            };
+
             fetch('./bios/bios7.bin', { method: 'HEAD' })
                 .then(response => {
                     if (!response.ok) {
