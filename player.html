@@ -69,8 +69,13 @@
         // --- 核心路径配置 ---
         // 指定所有 .data/.wasm/.js 核心文件从 ./ems/cores/ 目录加载
         window.EJS_settings = {
-            "corePath": "./ems/cores/",
-            "memorySize": 512
+            "corePath": "./ems/data/cores/",
+            "memorySize": 512,
+            "frameRate": 80,
+            "fastForward": true,
+            "slowMotion": false,
+            "rewindEnabled": "enabled",
+            "cheatsEnabled": false
         };
 
         if (coreType === 'ps1' || coreType === 'playstation') {
