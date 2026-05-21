@@ -6,6 +6,11 @@
     <style>
     body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
     #game-container {width:100vw;height:100vh;}
+    canvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        -ms-interpolation-mode: nearest-neighbor;
+    }
     </style>
 </head>
 <body>
@@ -75,11 +80,23 @@
             "fastForward": true,
             "slowMotion": false,
             "rewindEnabled": "enabled",
-            "cheatsEnabled": false
+            "cheatsEnabled": false,
+            "videoScale": 2,
+            "videoSmooth": false,
+            "videoFilter": "none",
+            "internalResolution": 2
         };
 
         if (coreType === 'ps1' || coreType === 'playstation') {
             window.EJS_biosUrl = "./bios/scph5502.bin";
+
+            // PlayStation 高清设置
+            window.EJS_settings = {
+                ...window.EJS_settings,
+                "pcsx_rearmed_gpu": "gpu_unai",
+                "pcsx_rearmed_resolution": 2,
+                "pcsx_rearmed_dithering": "disabled"
+            };
 
             fetch('./bios/scph5502.bin', { method: 'HEAD' })
                 .then(response => {
@@ -97,9 +114,24 @@
         }
         else if (coreType === 'gba') {
             window.EJS_biosUrl = "./bios/gba_bios.bin";
+
+            // GBA 高清设置
+            window.EJS_settings = {
+                ...window.EJS_settings,
+                "mgba_interframe_blending": false,
+                "mgba_video_color_correction": "enabled",
+                "mgba_lcd_ghosting": "disabled"
+            };
         }
         else if (coreType === 'gb' || coreType === 'gbc') {
             window.EJS_biosUrl = "./bios/gbc_bios.bin";
+
+            // GB/GBC 高清设置
+            window.EJS_settings = {
+                ...window.EJS_settings,
+                "gambatte_gb_internal_palette": "optimized",
+                "gambatte_mix_frames": "disabled"
+            };
         }
         else if (coreType === 'segacd') {
             window.EJS_biosUrl = "./bios/bios_CD_U.bin";
