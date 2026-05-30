@@ -8,10 +8,10 @@
     #game-container {width:100vw;height:100vh;}
     canvas {
         /* 强行使用像素邻近法拉伸，保持像素点绝对锐利 */
-        image-rendering: -moz-crisp-edges;         /* Firefox */
-        image-rendering: -webkit-optimize-contrast;      /* Safari */
-        image-rendering: pixelated;                /* Chrome / Edge / Opera */
-        image-rendering: crisp-edges;
+        image-rendering: -moz-crisp-edges !important;
+        image-rendering: -webkit-optimize-contrast !important;
+        image-rendering: pixelated !important;
+        image-rendering: crisp-edges !important;
     }
     </style>
 </head>
@@ -31,6 +31,9 @@
         window.EJS_DEBUG_XX = false;
 
         window.EJS_player = '#game';
+
+        EJS_scale = 1;
+        EJS_sharp = true;
 
         const coreMap = {
             'ps1': 'pcsx_rearmed',
