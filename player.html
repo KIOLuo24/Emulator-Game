@@ -209,6 +209,76 @@
             }
         }
 
+        // ========== 通用 shader 加载器：从本地相对路径注册，所有核心/游戏通用 ==========
+        const SHADER_BASE = "./ems/data/glsl-shaders-master/";
+        window.EJS_shaders = {};
+
+        function resolvePath(dir, ref) {
+            const out = [];
+            for (const p of (dir + ref).split("/")) {
+                if (p === "." || p === "") continue;
+                if (p === "..") out.pop();
+                else out.push(p);
+            }
+            return out.join("/");
+        }
+
+        async function fetchText(path) {
+            const res = await fetch(path);
+            if (!res.ok) throw new Error("Shader 文件加载失败: " + path);
+            return await res.text();
+        }
+
+        // 从 .glslp 预设注册 shader（支持 #reference 嵌套、多通道）
+        async function registerShaderFromPreset(displayName, presetRelPath) {
+            try {
+                let url = SHADER_BASE + presetRelPath;
+                let text = await fetchText(url);
+                let guard = 0;
+                // 跟随 #reference 嵌套预设
+                while (text.trim().startsWith("#reference") && guard++ < 5) {
+                    const ref = text.trim().split(/\s+/).pop().replace(/["']/g, "");
+                    url = resolvePath(url.substring(0, url.lastIndexOf("/") + 1), ref);
+                    text = await fetchText(url);
+                }
+                const dir = url.substring(0, url.lastIndexOf("/") + 1);
+                const lines = text.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("#"));
+                const newLines = [];
+                const resources = [];
+                for (const line of lines) {
+                    const m = line.match(/^(shader\d+)\s*=\s*(.+)$/);
+                    if (m) {
+                        // 抓取通道 .glsl 文件，展平为同名资源
+                        const ref = m[2].replace(/^"|"$/g, "").trim();
+                        const content = await fetchText(resolvePath(dir, ref));
+                        const fileName = ref.split("/").pop();
+                        resources.push({ name: fileName, type: "text", value: content });
+                        newLines.push(m[1] + ' = "' + fileName + '"');
+                    } else {
+                        newLines.push(line);
+                    }
+                }
+                window.EJS_shaders[displayName] = {
+                    shader: { type: "text", value: newLines.join("\n") },
+                    resources: resources
+                };
+                console.log("Shader 已注册:", displayName);
+            } catch (e) {
+                console.warn("注册失败:", displayName, e);
+            }
+        }
+
+        // 注册需要的 shader（可自行增删，路径相对 glsl-shaders-master）
+        async function initShaders() {
+            await Promise.all([
+                registerShaderFromPreset("xbrz-freescale", "xbrz/xbrz-freescale.glslp"),
+                registerShaderFromPreset("2xScaleHQ", "scalehq/2xScaleHQ.glslp"),
+                registerShaderFromPreset("crt-geom", "crt/crt-geom.glslp"),
+                registerShaderFromPreset("sharp-bilinear", "interpolation/sharp-bilinear.glslp")
+            ]);
+        }
+        // ========== shader 加载器结束 ==========
+
         window.EJS_onGameStart = () => {
             const fixCanvasBuffer = () => {
                 const c = document.querySelector('canvas.ejs_canvas');
@@ -227,6 +297,13 @@
             window.addEventListener('resize', () => setTimeout(fixCanvasBuffer, 300));
         };
     </script>
-    <script src="./ems/data/loader.js"></script>
+    <script>
+        // 先完成 shader 注册，再加载模拟器（保证 loader.js 读取到 EJS_shaders）
+        initShaders().then(() => {
+            const s = document.createElement("script");
+            s.src = "./ems/data/loader.js";
+            document.body.appendChild(s);
+        });
+    </script>
 </body>
 </html>
