@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Emulator-Game</title>
+    <script src="./coi-serviceworker.js"></script>
     <style>
     body,html{margin:0;padding:0;width:100%;height:100%;background: #000000}
     #game-container {width:100vw;height:100vh;}
@@ -89,7 +90,7 @@
             "videoSmooth": false,        // 【修改】关闭全局画面平滑
             "videoFilter": "none",
             "internalResolution": 1,
-            "initialMemorySize": 64,
+            "initialMemorySize": 256,
             "autoFrameSkip": true,
             "frameSkip": 0
         };
@@ -207,6 +208,24 @@
                 console.log("MSlug6 detected: Using awbios.zip BIOS");
             }
         }
+
+        window.EJS_onGameStart = () => {
+            const fixCanvasBuffer = () => {
+                const c = document.querySelector('canvas.ejs_canvas');
+                if (!c) return;
+                window.dispatchEvent(new Event('resize'));
+                setTimeout(() => {
+                    if (c.width < 600) {
+                        const r = c.getBoundingClientRect();
+                        c.width = Math.round(r.width);
+                        c.height = Math.round(r.height);
+                    }
+                }, 500);
+            };
+            setTimeout(fixCanvasBuffer, 1000);
+            setTimeout(fixCanvasBuffer, 3000);
+            window.addEventListener('resize', () => setTimeout(fixCanvasBuffer, 300));
+        };
     </script>
     <script src="./ems/data/loader.js"></script>
 </body>
